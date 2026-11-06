@@ -29,9 +29,15 @@ Judge simplicity by the concepts, state owners, and indirection a reader must tr
 
 ## Test the requirement
 
-Use explicit inputs and observable outcomes that distinguish the intended behavior from the regression. Keep each test focused; remove settings and helpers unrelated to its execution path or prerequisites. Internal call counts are useful only when the count is a requirement, such as loading once.
+Each test should tell one coherent case through its name, inputs, actions, and expected outcome. Keep only the setup and assertions that establish that case. Several phases belong together when the guarantee needs them, such as recovery after failure; unrelated cases do not.
 
-Repeat operations when freshness or reuse matters. Check affected alternatives and error paths. Reuse relevant coverage; add tests for missing behavior, not to mirror each implementation detail.
+Keep the smallest set that distinguishes the required behaviors and regressions. Internal call counts matter only when they express a requirement, such as loading once. Confirm that an injected failure actually occurred: a timeout or closed socket alone may pass for the wrong reason.
+
+Order tests by related behavior so the reader carries useful context into the next one. Use concrete names instead of explanatory comments. Treat a comment as a prompt to improve the code first; retain reasons that cannot be expressed clearly in names or structure.
+
+Before adding a custom fixture, wait, assertion, or resource helper, look for an existing framework or base-class facility. Prefer straightforward code. Share repetitive setup when it stays understandable, but keep scenario-specific inputs and actions visible. Avoid callbacks, flags, or general-purpose helpers that save lines by hiding the case.
+
+Synchronize on the event the assertion needs, not a delay or an earlier event in another thread. Preserve cleanup on failure. Read the final tests in sequence without the diff and check that their purpose is clear without the conversation.
 
 ## Explain and deliver
 
