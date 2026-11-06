@@ -1,0 +1,4 @@
+interface:
+  display_name: "Human Review"
+  short_description: "Review necessity, behavior, and lifecycle"
+  default_prompt: "Use $human-review to check whether this change is necessary, preserves required behavior, and handles object lifetimes correctly."
