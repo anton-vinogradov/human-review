@@ -39,7 +39,9 @@ Keep adapters that perform a necessary conversion or uphold a contract between c
 
 Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
 
-Use defaults wherever they provide the required behavior. Every explicitly passed value must have a specific purpose.
+For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. In tests, account for settings from the base class and helper methods.
+
+Keep the parameter if removing it breaks the code, changes required behavior, or prevents the test from reliably checking its scenario. If a suitable value is already set or the setting does not affect the scenario, it is redundant. Similar settings in nearby code do not prove that the parameter is necessary.
 
 Check whether each type cast is necessary and look for a simpler solution.
 
