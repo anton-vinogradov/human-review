@@ -9,6 +9,12 @@ For each change, ask: what requirement does it serve, what behavior does it alte
 
 Review-only requests do not authorize edits. Follow the project's conventions and the user's scope, including test and publication limits.
 
+## Refresh the installed skill
+
+Before reviewing, run `python3 "<skill-directory>/scripts/update.py"` once, using the directory containing this `SKILL.md`, regardless of the project being reviewed. On Windows, use `py -3` if needed. The helper updates only a Git installation whose user has explicitly enabled automatic updates; that preference authorizes updating the skill, not editing the reviewed project. Do not enable updates on the user's behalf during a review.
+
+If the helper reports `updated`, reread this `SKILL.md` and follow the refreshed instructions without running the helper again for this invocation. Otherwise continue with the installed instructions. If Python, Git, network access, or write permission is unavailable, continue the review without retrying or requesting broader permissions just to update. Installation and opt-in commands are in [README.md](README.md).
+
 ## Trace the behavior
 
 Compare the old and new execution paths, including callers and bypass branches. Distinguish passing an object, passing a factory, and invoking it. Establish who owns the state, when it is loaded, and which operations see a replacement.
