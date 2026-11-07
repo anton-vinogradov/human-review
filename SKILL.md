@@ -65,6 +65,8 @@ A shared failure or shared setup does not make independent requirements one scen
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
+Before adding a failure test, trace the call path and preceding checks in production code. Make sure the test models a reachable scenario. Distinguish failure to start from failure after a successful startup. Also distinguish the behavior of standard and custom implementations. Check existing tests and add only missing coverage.
+
 Test each requirement at the lowest level that can adequately verify it. Add a server, network access, or waits only when the required behavior cannot be checked without them.
 
 Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks needed for the guarantee being tested.
