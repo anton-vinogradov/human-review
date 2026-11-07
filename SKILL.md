@@ -1,56 +1,145 @@
 ---
 name: human-review
-description: "Review patches for necessary scope, preserved behavior, and simpler design. Use for code review or pre-delivery self-review."
+description: "Check whether code changes are necessary, preserve required behavior, and keep the solution simple. Use for code reviews and self-review before handing over work."
 ---
 
 # Human Review
 
-For each change, ask: what requirement does it serve, what behavior does it alter, and can an existing mechanism do the work?
+[English](SKILL.md) | [Русский](SKILL.ru.md)
 
-Review-only requests do not authorize edits. Follow the project's conventions and the user's scope, including test and publication limits.
+## 1. Justify every change and keep the diff minimal
 
-## Refresh the installed skill
+For each edit, identify the requirement it meets and how it changes behavior.
 
-Before reviewing, run `python3 "<skill-directory>/scripts/update.py"` once, using the directory containing this `SKILL.md`, regardless of the project being reviewed. On Windows, use `py -3` if needed. The helper updates only a Git installation whose user has explicitly enabled automatic updates; that preference authorizes updating the skill, not editing the reviewed project. Do not enable updates on the user's behalf during a review.
+Justify why it is needed. Check whether an existing tool or solution can replace it.
 
-If the helper reports `updated`, reread this `SKILL.md` and follow the refreshed instructions without running the helper again for this invocation. Otherwise continue with the installed instructions. If Python, Git, network access, or write permission is unavailable, continue the review without retrying or requesting broader permissions just to update. Installation and opt-in commands are in [README.md](README.md).
+Check whether each option passed to a call, setting, object, class, structure, and variable is necessary.
 
-## Trace the behavior
+For every change, ask yourself: “Why is this needed? Why can’t it be simpler and clearer?”
 
-Compare the old and new execution paths, including callers and bypass branches. Distinguish passing an object, passing a factory, and invoking it. Establish who owns the state, when it is loaded, and which operations see a replacement.
+Keep the diff minimal without losing required functionality. Do not add preparation for hypothetical future tasks or unrelated formatting changes.
 
-Investigate apparent duplication before removing it. Which earlier change made this operation necessary? A new implementation may have lost an implicit startup check or cleanup. Verify branches before claiming work happens twice.
+## 2. Trace the full behavior
 
-Check failure timing, retries, resource cleanup, and whether the original cause reaches the user. An error moving from startup to connection setup can change behavior even when both paths eventually fail. Check consumers before treating an internal exception type as a compatibility requirement.
+Review the entire affected flow: calling code, conditions, bypass paths, and code that consumes the result.
 
-## Simplify the responsible layer
+Find out who owns the state, when it is loaded, and which operations will see the updated value.
 
-First inspect what the receiving component already supports. If its contract is sufficient, correct what the caller supplies instead of adding another responsibility to the receiver. Do not move work into a shared constructor solely to make callers look alike.
+Account for when errors occur, retries, resource cleanup, and how the cause of an error reaches the user.
 
-Justify each added operation, field, branch, or abstraction by the current task. For removals, check dependent callers and guarantees. Prefer an existing compatible contract; retain adapters that perform a meaningful conversion or enforce a contract.
+## 3. Fix the problem in the responsible layer
 
-Follow state and work across the whole affected path. Removing a cache does not fix stale state if a caller captures the same value in a closure. Conversely, a dynamic provider and a file-based fallback may intentionally load at different times. Unifying them can introduce a regression.
+First, learn what the component receiving the data or call can already do.
 
-Judge simplicity by the concepts, state owners, and indirection a reader must track. A smaller diff is not always a clearer design. Avoid unrelated formatting and preparation for future tasks.
+If its capabilities are sufficient, fix the calling code. Do not give the component extra responsibilities just to make calls look alike.
 
-## Test the requirement
+Keep adapters that perform a necessary conversion or uphold a contract between components.
 
-Each test should tell one coherent case through its name, inputs, actions, and expected outcome. Keep only the setup and assertions that establish that case. Several phases belong together when the guarantee needs them, such as recovery after failure; unrelated cases do not.
+## 4. Keep the implementation simple and explicit
 
-Keep the smallest set that distinguishes the required behaviors and regressions. Internal call counts matter only when they express a requirement, such as loading once. Confirm that an injected failure actually occurred: a timeout or closed socket alone may pass for the wrong reason.
+Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
 
-Order tests by related behavior so the reader carries useful context into the next one. Use concrete names instead of explanatory comments. Treat a comment as a prompt to improve the code first; retain reasons that cannot be expressed clearly in names or structure.
+Use defaults wherever they provide the required behavior. Every explicitly passed value must have a specific purpose.
 
-Before adding a custom fixture, wait, assertion, or resource helper, look for an existing framework or base-class facility. Prefer straightforward code. Share repetitive setup when it stays understandable, but keep scenario-specific inputs and actions visible. Avoid callbacks, flags, or general-purpose helpers that save lines by hiding the case.
+Check whether each type cast is necessary and look for a simpler solution.
 
-Synchronize on the event the assertion needs, not a delay or an earlier event in another thread. Preserve cleanup on failure. Read the final tests in sequence without the diff and check that their purpose is clear without the conversation.
+The result of each operation must be clear. If code relies on a side effect, consider an explicit action that directly expresses the required change.
 
-## Explain and deliver
+## 5. Choose values, names, and formatting deliberately
 
-Keep comments that explain a non-obvious reason and prevent a plausible wrong simplification. Remove narration of obvious operations. Keep API contracts precise and user instructions actionable; read edited sections without the diff to check that they stand alone.
+Justify the choice of numbers, strings, configuration parameters, and other fixed values. Each value must have a clear meaning.
 
-Treat both the user's diagnosis and your first impression as hypotheses. Report supported findings with a triggering scenario, consequence, evidence, and the smallest useful correction. Separate defects from open questions and optional improvements. No findings is a valid result.
+Extract values used repeatedly with the same meaning into variables or constants.
 
-For a substantial redesign, explain one concrete execution, what becomes simpler, and the behavioral or compatibility cost. Resolve choices outside the agreed scope with the user; continue routine authorized fixes without another approval.
+Choose variable and method names that clearly show their purpose. Use the project’s terminology and naming conventions.
 
-After fixes, read the complete affected flow and the final diff. Report conclusions, checks run, and remaining gaps, rather than narrating a question for every line.
+Follow the project’s rules for line lengths and line breaks.
+
+## 6. Check requirements with simple, clear tests
+
+Each test must check one coherent scenario. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
+
+Several stages are acceptable if together they check one guarantee, such as recovery after a failure.
+
+Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
+
+Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks directly related to the scenario under test.
+
+Justify each nontrivial operation, structure, setting, and object. Check whether a simpler approach will work.
+
+Use the test framework’s features. Read the project’s tests and look for suitable solutions there.
+
+Do not hide the scenario’s meaning behind helper functions, flags, or complex setup.
+
+Order tests to make them easy to read. Moving to the next test should require as little context switching as possible.
+
+Confirm that the failure being tested actually occurred.
+
+Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait.
+
+Release resources even when an error occurs.
+
+## 7. Write documentation and explanations in plain language
+
+Use the [human-writing](https://github.com/anton-vinogradov/human-writing) skill for documentation, comments, PR descriptions, and review summaries.
+
+If the skill is not installed, read `skills/human-writing/SKILL.md` in its repository. If those instructions are unavailable, apply the rules in this section.
+
+Start with the main point. Be specific: who does what, under which conditions, and with what result.
+
+Use verified facts. Do not invent system behavior or present assumptions as established causes.
+
+Keep technical details that help the reader understand the solution or carry out an action.
+
+If code needs a comment, check its readability and the overall approach. First consider clear names and a simpler solution that needs no explanation.
+
+Keep a comment about a non-obvious reason or constraint if both conditions hold:
+
+- The reason or constraint cannot be changed within the scope of the task.
+- No suitable solution has been found that removes the need for an explanation.
+
+Express obvious actions through code and names.
+
+Write documentation for someone who did not take part in the discussion. Instructions must let the reader complete the task without guessing.
+
+Keep documentation diffs minimal.
+
+If the behavior is clear from the name, do not add a description. Use an empty documentation block only if the project’s style requires one.
+
+When documenting a code element, describe its contract and capabilities. Do not list where, how, by whom, or why it is used.
+
+## 8. Support findings with evidence
+
+Treat the user’s initial diagnosis and your own first impression as hypotheses to check.
+
+For each finding, show the scenario that triggers it, its consequence, the evidence, and the smallest sufficient fix.
+
+Distinguish bugs from open questions and optional improvements.
+
+A review with no findings is a valid result.
+
+## 9. Check and explain the final solution
+
+After making fixes, reread the entire affected flow and the final diff.
+
+Check that every remaining edit is necessary and that existing tools and simpler solutions have been considered.
+
+For a substantial rework, walk through a concrete execution example. Explain what became simpler and what changes to behavior or compatibility this required.
+
+Report your conclusions, completed checks, and remaining gaps.
+
+For each unresolved problem, explicitly identify and visually highlight it in the report, for example with `⚠️ Unresolved problem`, or ask the user a specific question.
+
+## 10. Update the installed skill when using it
+
+Before a review, run `python3 "<skill-directory>/scripts/update.py"` once. Use the directory containing this `SKILL.md`, regardless of the project being reviewed. On Windows, use `py -3` if needed.
+
+The user enables automatic updates once for each installation. Do not enable them on the user’s behalf during a review. Installation and the command to enable updates are described in [README.md](README.md).
+
+The script contacts the upstream source at most once a day and preserves user edits.
+
+If the script reports `updated`, reread this `SKILL.md` and use the updated instructions in the current review. You do not need to run the script again for this invocation of the skill.
+
+Otherwise, continue with the installed version. If tools, network access, or permissions are unavailable, do not retry or request broader permissions just to update the skill.
+
+Permission to update the skill does not grant permission to change the project being reviewed.

@@ -1,12 +1,14 @@
 # Human Review
 
-A Codex skill for reviewing whether a code change is necessary, preserves the required behavior, and handles object lifetimes correctly.
+[English](README.md) | [Русский](README.ru.md)
+
+A Codex skill for reviewing whether each code change is necessary, preserves required behavior, and uses a simpler solution where possible.
 
 Example request:
 
 > Use $human-review to review this diff. Explain which additions are necessary, verify lifecycle assumptions, and identify simpler existing mechanisms. Keep the review read-only.
 
-See [SKILL.md](SKILL.md) for the complete instructions and [agents/openai.yaml](agents/openai.yaml) for Codex interface metadata.
+The complete skill is available in [English](SKILL.md) and [Russian](SKILL.ru.md). `SKILL.md` is the installation entry point; `SKILL.ru.md` is its Russian translation. Codex interface metadata is in [agents/openai.yaml](agents/openai.yaml).
 
 ## Install
 
@@ -55,8 +57,8 @@ The preference, last attempted check, and update lock are stored in the installa
 
 Existing copies cannot acquire this updater merely because the GitHub repository changes.
 
-- **Existing Git clone:** save or commit your edits, then update the clean `main` checkout with `git pull --ff-only` from this repository. Run the `--enable` command above once.
-- **Copied files or a skill-installer download:** move the old skill folder to a backup outside all skill discovery directories. Clone into the original location, then run `--enable`. Keep the backup until you have checked for personal changes. Reapplying those changes to the installation will suspend automatic updates.
+- **Clean Git clone without local commits:** update the `main` checkout with `git pull --ff-only` from this repository. Run the `--enable` command above once.
+- **Copied files, a skill-installer download, or a Git clone with local edits or commits:** move the old skill folder to a backup outside all skill discovery directories. Clone into the original location, then run `--enable`. Keep the backup until you have checked for personal changes. Reapplying those changes to the installation will suspend automatic updates.
 
 Keep one discoverable `human-review` installation to avoid selecting an older duplicate. No reset, automatic merge of local changes, or deletion of an existing installation is needed.
 
