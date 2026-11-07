@@ -59,13 +59,15 @@ Follow the project’s rules for line lengths and line breaks.
 
 ## 6. Check requirements with simple, clear tests
 
-Each test must check one coherent scenario. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
+For each test, name the single guarantee it checks. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
 
-Several stages are acceptable if together they check one guarantee, such as recovery after a failure.
+A shared failure or shared setup does not make independent requirements one scenario. Keep several stages together when they establish that guarantee, such as recovery after a failure.
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
-Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks directly related to the scenario under test.
+Test each requirement at the lowest level that can adequately verify it. Add a server, network access, or waits only when the required behavior cannot be checked without them.
+
+Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks needed for the guarantee being tested.
 
 Justify each nontrivial operation, structure, setting, and object. Check whether a simpler approach will work.
 
