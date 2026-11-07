@@ -2,17 +2,46 @@
 
 [English](README.md) | [Русский](README.ru.md)
 
-A Codex skill for reviewing whether each code change is necessary, preserves required behavior, and uses a simpler solution where possible.
+Code review instructions for checking whether each change is necessary, preserves required behavior, and uses a simpler solution where possible.
 
-Example request:
+Installation depends on the application running the model. The commands below are for Codex. Other agents may use different skill directories and invocation methods.
+
+## Quick start
+
+If your agent supports skills, file access, and command execution, paste this request into it:
+
+```text
+Install human-review from https://github.com/anton-vinogradov/human-review as a skill for the current agent.
+Use the installation method and skill directory supported by this agent.
+If installation as a standalone Git clone is supported, use it. Leave automatic updates disabled.
+Check that the skill is available. If skill installation is unsupported, say so.
+```
+
+After installation in Codex, you can send this request:
 
 > Use $human-review to review this diff. Explain which additions are necessary, verify lifecycle assumptions, and identify simpler existing mechanisms. Keep the review read-only.
 
+For a chat without skill support, attach [SKILL.md](SKILL.md), the diff, and the source files needed to understand the changes. Then send:
+
+```text
+Review the attached diff using the attached human-review instructions.
+Skip the automatic-update section. If human-writing is unavailable, use the writing rules in section 7.
+```
+
+This applies the instructions in the current chat. It does not install the skill or enable automatic updates.
+
+## Requirements
+
+- Reviewing with the attached instructions requires neither Git nor Python.
+- Installation with `git clone` requires Git.
+- Automatic updates require Git, Python 3.9 or later, network access, and permission to modify the installed skill.
+- Documentation and explanations use [human-writing](https://github.com/anton-vinogradov/human-writing). If it is not installed, the agent reads its instructions from the repository. If those instructions are unavailable, section 7 of human-review includes the core writing rules.
+
 The complete skill is available in [English](SKILL.md) and [Russian](SKILL.ru.md). `SKILL.md` is the installation entry point; `SKILL.ru.md` is its Russian translation. Codex interface metadata is in [agents/openai.yaml](agents/openai.yaml).
 
-## Install
+## Manual installation in Codex
 
-For automatic updates, install a standalone Git clone. This requires Git and Python 3.9 or later. In macOS, Linux, Windows Git Bash, or PowerShell:
+To support automatic updates, install a standalone Git clone. In macOS, Linux, Windows Git Bash, or PowerShell:
 
 ```sh
 git clone --branch main https://github.com/anton-vinogradov/human-review.git "$HOME/.agents/skills/human-review"
