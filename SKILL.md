@@ -112,6 +112,10 @@ Express obvious actions through code and names.
 
 Write documentation for someone who did not take part in the discussion. Instructions must let the reader complete the task without guessing.
 
+Before editing documentation, compare the behavior being described before and after the change. Read the existing description. Justify each edit by a need in the current task: what would the reader misunderstand or be unable to do without it?
+
+Do not add descriptions of unchanged behavior just because you studied it during the work. Add information about it only as necessary context for the change or when the task explicitly requires it. Do not duplicate information already provided. If the need for an edit is not established, leave the documentation unchanged.
+
 Keep documentation diffs minimal.
 
 If the behavior is clear from the name, do not add a description. Use an empty documentation block only if the project’s style requires one.
