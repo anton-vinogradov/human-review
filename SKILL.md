@@ -47,6 +47,8 @@ Keep the parameter if removing it breaks the code, changes required behavior, or
 
 Check whether each data transformation, including type casts, is necessary and look for a simpler solution.
 
+Declare variables as close as possible to their first use, in the narrowest necessary scope. When moving declarations, preserve the required conditions and order of evaluation, as well as resource lifetimes.
+
 The result of each operation must be clear. If code relies on a side effect, consider an explicit action that directly expresses the required change.
 
 ## 5. Choose values, names, and formatting deliberately
