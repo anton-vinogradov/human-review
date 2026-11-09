@@ -7,13 +7,15 @@ description: "Check whether code changes are necessary, preserve required behavi
 
 [English](SKILL.md) | [Русский](SKILL.ru.md)
 
+Set the review scope from the task requirements and affected behavior. Examples in the rules do not limit where those rules apply.
+
 ## 1. Justify every change and keep the diff minimal
 
 For each edit, identify the requirement it meets and how it changes behavior.
 
 Justify why it is needed. Check whether an existing tool or solution can replace it.
 
-Check whether each option passed to a call, setting, object, class, structure, and variable is necessary.
+Check whether each part of the change is necessary. Determine what changes if it is removed or simplified.
 
 For every change, ask yourself: “Why is this needed? Why can’t it be simpler and clearer?”
 
@@ -39,23 +41,23 @@ Keep adapters that perform a necessary conversion or uphold a contract between c
 
 Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
 
-For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. In tests, account for settings from the base class and helper methods.
+For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
 
 Keep the parameter if removing it breaks the code, changes required behavior, or prevents the test from reliably checking its scenario. If a suitable value is already set or the setting does not affect the scenario, it is redundant. Similar settings in nearby code do not prove that the parameter is necessary.
 
-Check whether each type cast is necessary and look for a simpler solution.
+Check whether each data transformation, including type casts, is necessary and look for a simpler solution.
 
 The result of each operation must be clear. If code relies on a side effect, consider an explicit action that directly expresses the required change.
 
 ## 5. Choose values, names, and formatting deliberately
 
-Justify the choice of numbers, strings, configuration parameters, and other fixed values. Each value must have a clear meaning.
+Justify the choice of every fixed value. Each value must have a clear meaning.
 
 Extract values used repeatedly with the same meaning into variables or constants.
 
-Choose variable and method names that clearly show their purpose. Use the project’s terminology and naming conventions.
+Choose names for code elements that clearly show their purpose. Use the project’s terminology and naming conventions.
 
-Follow the project’s rules for line lengths and line breaks.
+Follow the project’s formatting rules, including line lengths and line breaks.
 
 ## 6. Check requirements with simple, clear tests
 
@@ -65,23 +67,23 @@ A shared failure or shared setup does not make independent requirements one scen
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
-Test only realistic scenarios. Do not manipulate internal data structures to create states that cannot occur in practice.
+Model only scenarios that can occur in real use. Check that the combination of conditions created by test setup and test doubles can occur in production. Do not artificially create states that cannot occur in practice.
 
-Before adding a failure test, trace the call path and preceding checks in production code. Make sure the test models a reachable scenario. Distinguish failure to start from failure after a successful startup. Also distinguish the behavior of standard and custom implementations. Check existing tests and add only missing coverage.
+Before adding a test, trace the call path and preceding checks in production code. Account for differences in conditions, execution stages, and implementations when they change reachability or the expected result. Do not carry conclusions between such cases without checking them. For example, failure to start does not establish behavior after a successful startup. Check existing tests and add only missing coverage.
 
-Test each requirement at the lowest level that can adequately verify it. Add a server, network access, or waits only when the required behavior cannot be checked without them.
+Test each requirement at the lowest level that can adequately verify it. Add infrastructure, external dependencies, or waits only when the required behavior cannot be checked without them.
 
 Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks needed for the guarantee being tested.
 
-Justify each nontrivial operation, structure, setting, and object. Check whether a simpler approach will work.
+Justify each nontrivial part of the test. Check whether a simpler approach will work.
 
 Use the test framework’s features. Read the project’s tests and look for suitable solutions there.
 
-Do not hide the scenario’s meaning behind helper functions, flags, or complex setup.
+Do not hide the scenario’s meaning behind test implementation details, including helper functions, flags, and complex setup.
 
 Order tests to make them easy to read. Moving to the next test should require as little context switching as possible.
 
-Confirm that the failure being tested actually occurred.
+Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
 Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait.
 
@@ -89,7 +91,7 @@ Release resources even when an error occurs.
 
 ## 7. Write documentation and explanations in plain language
 
-Use the [human-writing](https://github.com/anton-vinogradov/human-writing) skill for documentation, comments, PR descriptions, and review summaries.
+Use the [human-writing](https://github.com/anton-vinogradov/human-writing) skill for all work texts within the task.
 
 If the skill is not installed, read `skills/human-writing/SKILL.md` in its repository. If those instructions are unavailable, apply the rules in this section.
 
