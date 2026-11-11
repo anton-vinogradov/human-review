@@ -15,6 +15,14 @@ For each edit, identify the requirement it meets and how it changes behavior.
 
 Justify why it is needed. Check whether an existing tool or solution can replace it.
 
+Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes.
+
+List every new mechanism that the change adds: threads, schedulers, caches, registries, protocols between components. For each one, search the project for an existing mechanism with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how other code in the project uses it: its callers often show how to supply the property it lacks. In the report, name the missing property and the callers you checked.
+
+Compare the change with your outline. Each component, state owner, protocol, or public API that the outline does not need must have a reason. Do not keep a design only because the task text prescribes it. If the outline is simpler but weakens a guarantee, describe the trade-off and let the task owner choose.
+
+Before you recommend removing a check, describe the worst scenario that it protects against. Include cases with several elements or participants if they are possible. Recommend the removal only if that scenario cannot happen or does no harm. If the author covered the check with a test, take the scenario from that test. If you cannot show that it is harmless, ask the author instead of recommending the removal.
+
 Check whether each part of the change is necessary. Determine what changes if it is removed or simplified.
 
 For every change, ask yourself: “Why is this needed? Why can’t it be simpler and clearer?”
@@ -25,7 +33,9 @@ Keep the diff minimal without losing required functionality. Do not add preparat
 
 Review the entire affected flow: calling code, conditions, bypass paths, and code that consumes the result.
 
-Find out who owns the state, when it is loaded, and which operations will see the updated value.
+Find out who owns the state, when it is loaded, and which operations will see the updated value. Some work continues after the call returns. Find out what context it takes from the caller and how long it keeps it.
+
+Read the implementation of each helper or library call that your conclusion depends on. Do not infer its behavior from its name or parameters. If you did not read it, do not state its behavior as a fact: mark the conclusion as unverified.
 
 Account for when errors occur, retries, resource cleanup, and how the cause of an error reaches the user.
 
@@ -40,6 +50,14 @@ Keep adapters that perform a necessary conversion or uphold a contract between c
 ## 4. Keep the implementation simple and explicit
 
 Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
+
+Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state.
+
+Sometimes other code has to follow a protocol with the internals of another component or report what it did. In that case, look for a design where one owner orders the operations. When you change the order of operations, check every operation that relied on the old order.
+
+Choose the simplest mechanism that gives the required precision and guarantees. Add precision, caching, or notifications only when the task needs them.
+
+Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure.
 
 For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
 
@@ -87,7 +105,11 @@ Order tests to make them easy to read. Moving to the next test should require as
 
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
+Break the code that each test protects and run the test: the test must fail. Before you remove a test, show that the remaining tests catch every breakage it catches.
+
 Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait.
+
+For each wait with a timeout, find the clock that the timeout reads. Check that this clock moves in the test environment. Otherwise the test hangs instead of failing when the event never happens.
 
 Release resources even when an error occurs.
 
