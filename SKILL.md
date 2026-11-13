@@ -89,9 +89,15 @@ Choose the smallest set of scenarios that covers the changed behavior and possib
 
 Model only scenarios that can occur in real use. Check that the combination of conditions created by test setup and test doubles can occur in production. Do not artificially create states that cannot occur in practice.
 
+Create a scenario through the inputs that users, operators or the environment produce: data, files, configuration and calls. If the scenario depends on another component’s result, run that component on such inputs. Do not stub its result. Use test doubles only for time, concurrency, unavailable external systems, and components that the scenario does not depend on.
+
+In the report, list the test doubles of the reviewed tests. For each one, name what it replaces and the real situation it stands for. Say whether real inputs could create that situation. Go through every test that uses the double, not only the first one you notice. For each test whose scenario comes from a stubbed result that real inputs could produce, name the level where real components create it.
+
+Before you call a test double or a part of a test unnecessary, break the production code that it guards and run the test. If you cannot run the test, ask the author instead of stating that it checks nothing.
+
 Before adding a test, trace the call path and preceding checks in production code. Account for differences in conditions, execution stages, and implementations when they change reachability or the expected result. Do not carry conclusions between such cases without checking them. For example, failure to start does not establish behavior after a successful startup. Check existing tests and add only missing coverage.
 
-Test each requirement at the lowest level that can adequately verify it. Add infrastructure, external dependencies, or waits only when the required behavior cannot be checked without them.
+Test each requirement at the lowest level where real inputs can create its scenario. Add infrastructure, external dependencies, or waits only when the required behavior cannot be checked without them.
 
 Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks needed for the guarantee being tested.
 
