@@ -83,7 +83,7 @@ Follow the project’s formatting rules, including line lengths and line breaks.
 
 For each test, name the single guarantee it checks. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
 
-A shared failure or shared setup does not make independent requirements one scenario. Keep several stages together when they establish that guarantee, such as recovery after a failure.
+Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs to the same rule need not become separate tests.
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
