@@ -89,7 +89,7 @@ Make a separate pass for overloaded tests. For each test, list the required beha
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
-Model only scenarios that can occur in real use. Check that the combination of conditions created by test setup and test doubles can occur in production. Do not artificially create states that cannot occur in practice.
+For each test, name a supported action or external event that creates its starting state. What would someone observe if the code broke? Trace the path to that point. Check what has already succeeded and which settings can still change. A direct API test can also protect a documented contract.
 
 Create a scenario through the inputs that users, operators or the environment produce: data, files, configuration and calls. If the scenario depends on another component’s result, run that component on such inputs. Do not stub its result. Use test doubles only for time, concurrency, unavailable external systems, and components that the scenario does not depend on.
 
@@ -97,7 +97,7 @@ In the report, list the test doubles of the reviewed tests. For each one, name w
 
 Before you call a test double or a part of a test unnecessary, break the production code that it guards and run the test. If you cannot run the test, ask the author instead of stating that it checks nothing.
 
-Before adding a test, trace the call path and preceding checks in production code. Account for differences in conditions, execution stages, and implementations when they change reachability or the expected result. Do not carry conclusions between such cases without checking them. For example, failure to start does not establish behavior after a successful startup. Check existing tests and add only missing coverage.
+Compare tests that promise the same outcome, including tests in other classes or at other layers. Name a reachable regression that one catches while the others pass. If everything it checks is already covered, remove the duplicate.
 
 Test each requirement at the lowest level where real inputs can create its scenario. Add infrastructure, external dependencies, or waits only when the required behavior cannot be checked without them.
 
@@ -113,7 +113,7 @@ Order tests to make them easy to read. Moving to the next test should require as
 
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
-Break the code that each test protects and run the test: the test must fail. Before you remove a test, show that the remaining tests catch every breakage it catches.
+Break the code that each test protects and run the test: the test must fail. Before removing it, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it.
 
 Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait.
 
