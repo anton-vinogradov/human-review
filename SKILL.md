@@ -83,7 +83,7 @@ Follow the project’s formatting rules, including line lengths and line breaks.
 
 For each test, name the single guarantee it checks. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
 
-Give each test a short description in the project’s documentation format, even if its name looks clear: the guarantee it checks and how the test creates the situation. Write it for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add the reason to the description or simplify the test.
+Give each test a short description in the project’s documentation format, even if its name looks clear. Its first sentence states the guarantee that the test checks. The next sentences explain how the test checks it: the situation it creates and the result it checks. Write it for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add the reason to the description or simplify the test.
 
 Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs to the same rule need not become separate tests.
 
