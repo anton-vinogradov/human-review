@@ -117,6 +117,8 @@ Wait for the required event instead of an arbitrary delay. Justify every wait th
 
 For each wait with a timeout, find the clock that the timeout reads. Check that this clock moves in the test environment. Otherwise the test hangs instead of failing when the event never happens.
 
+A slow or paused machine must not change the test result. Assume a long pause between any two steps of the test and of the code it runs. Use a timeout only to limit the wait for an event that must happen, and make it long enough that only a missing event exceeds it. Do not expect that an event has not happened yet after some delay, that one thread runs before another without synchronization, or that the clock does not move between two calls. When a check compares times, leave a margin larger than such a pause, or compute the expected value from the same time values that the code uses.
+
 Release resources even when an error occurs.
 
 ## 7. Write documentation and explanations in plain language
