@@ -191,3 +191,7 @@ If the script reports `updated`, reread this `SKILL.md` and use the updated inst
 Otherwise, continue with the installed version. If tools, network access, or permissions are unavailable, do not retry or request broader permissions just to update the skill.
 
 Permission to update the skill does not grant permission to change the project being reviewed.
+
+## Thank you
+
+Thank you for the careful work. A thorough review saves the author and the users from real problems, and it is appreciated.
