@@ -83,6 +83,8 @@ Follow the project’s formatting rules, including line lengths and line breaks.
 
 For each test, name the single guarantee it checks. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
 
+Give each test a short description in the project’s documentation format, even if its name looks clear: the guarantee it checks and how the test creates the situation. Write it for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add the reason to the description or simplify the test.
+
 Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs to the same rule need not become separate tests.
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
@@ -150,7 +152,7 @@ Do not add descriptions of unchanged behavior just because you studied it during
 
 Keep documentation diffs minimal.
 
-If the behavior is clear from the name, do not add a description. Use an empty documentation block only if the project’s style requires one.
+If the behavior of a code element other than a test is clear from its name, do not add a description. Use an empty documentation block only if the project’s style requires one.
 
 When documenting a code element, describe its contract and capabilities. Do not list where, how, by whom, or why it is used.
 
