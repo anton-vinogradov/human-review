@@ -7,112 +7,125 @@ description: "Check whether code changes are necessary, preserve required behavi
 
 [English](SKILL.md) | [Русский](SKILL.ru.md)
 
-Set the review scope from the task requirements and affected behavior. Examples in the rules do not limit where those rules apply.
+A review strives for a change that a maintainer can accept without regret. Every part of it is needed. It behaves correctly in every situation the system can meet, including failures. It fits the project like the code around it and is as simple as the task allows. The people who run it can see what it does, and its tests prove what it promises.
 
-## 1. Justify every change and keep the diff minimal
+Each section states one aim and the directions that lead to it. Examples show a direction; they do not limit it. If a case matches no example, apply the aim. Set the review scope from the task requirements and the affected behavior.
 
-For each edit, identify the requirement it meets and how it changes behavior.
+## 1. Every part of the change is needed
 
-Justify why it is needed. Check whether an existing tool or solution can replace it.
+Aim: each element of the change serves a requirement that someone relies on, and the diff contains nothing else.
 
-Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes.
+Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes. Compare the change with the outline. Each component, state owner, protocol, public member, or rule that the outline does not need must have a reason. Question rules that the task text prescribes, such as a formula, a retry policy, or a wait, the same way as code.
 
-List what the change adds:
+List what the change adds: mechanisms, public members, fields and collections, rules, checks and special cases, values derived from shared data. For each item, name the requirement it serves and who relies on it: a caller, an operator, or another guarantee. Remove an item that nothing relies on. A member that only the change itself calls does not need to be public.
 
-- mechanisms, such as threads, schedulers, caches, registries, and protocols between components;
-- public members;
-- fields and collections;
-- rules, such as formulas, limits, retries, waits, and ordering;
-- checks and special cases;
-- values derived from shared data.
+For each edit, identify the requirement it meets and how it changes behavior. Ask: why is it needed, and why can't it be simpler and clearer? Determine what changes if it is removed or simplified.
 
-For each item, name the requirement it serves and who relies on it: a caller, an operator, or another guarantee. Remove an item that nothing relies on. A public member that only the change itself calls does not need to be public.
+If the simpler outline weakens a guarantee, describe the trade-off and let the task owner choose.
 
-For each new mechanism, search the project for an existing mechanism with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how other code in the project uses it: its callers often show how to supply the property it lacks. In the report, name the missing property and the callers you checked.
+Keep the diff minimal without losing required behavior. Do not add preparation for hypothetical future tasks or unrelated formatting changes.
 
-Compare the change with your outline. Each component, state owner, protocol, or public API that the outline does not need must have a reason. Do not keep a design only because the task text prescribes it. If the outline is simpler but weakens a guarantee, describe the trade-off and let the task owner choose.
+## 2. The change fits the project like its peers
 
-Before you recommend removing a check, describe the worst scenario that it protects against. Include cases with several elements or participants if they are possible. Recommend the removal only if that scenario cannot happen or does no harm. If the author covered the check with a test, take the scenario from that test. If you cannot show that it is harmless, ask the author instead of recommending the removal.
+Aim: new code does what the project already does in the way the project does it, so a reader meets nothing new without a reason.
 
-Check whether each part of the change is necessary. Determine what changes if it is removed or simplified.
+For each new mechanism, such as a thread, a scheduler, a cache, a registry, or a protocol between components, search the project for an existing one with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how its callers use it: they often show how to supply the property it lacks. Name the missing property and the callers you checked.
 
-For every change, ask yourself: “Why is this needed? Why can’t it be simpler and clearer?”
+When a part gets a lifecycle, threads, metrics, configuration, or logging, connect it through the same path that its peer components use. A direct call from central startup or shutdown code, or a one-off way of doing what peers do in a common way, needs a reason.
 
-Keep the diff minimal without losing required functionality. Do not add preparation for hypothetical future tasks or unrelated formatting changes.
+Do it the right way in the change that creates the need. If the right way requires restructuring existing code outside the task, name the debt, its reason, and its cost in the review, and let the task owner decide whether to do it now or in a separate task.
 
-## 2. Trace the full behavior
+Fix a problem in the layer responsible for it. First learn what the component that receives the data or call can already do. If that is enough, fix the calling code. Do not give a component extra responsibilities just to make calls look alike. Keep adapters that perform a necessary conversion or uphold a contract between components.
 
-Review the entire affected flow: calling code, conditions, bypass paths, and code that consumes the result.
+Place each decision where its reason lives. The code that owns a loop or a lifecycle decides when to stop and what to do after a failure. A unit of work stays a plain operation that throws.
 
-Find out who owns the state, when it is loaded, and which operations will see the updated value. Other components or nodes may change the state too. Then derive any status about it, such as a failure count, from what you observe now, not only from your own actions. Some work continues after the call returns. Find out what context it takes from the caller and how long it keeps it.
+Use the project's terminology, naming conventions, formatting rules, and test framework features. Read nearby code and tests for solutions.
 
-Read the implementation of each helper or library call that your conclusion depends on. Do not infer its behavior from its name or parameters. If you did not read it, do not state its behavior as a fact: mark the conclusion as unverified.
+## 3. Behavior is correct in every reachable situation
 
-Account for when errors occur, retries, resource cleanup, and how the cause of an error reaches the user.
+Aim: for each situation the system can meet, you can say what happens, and that statement rests on code you have read.
 
-## 3. Fix the problem in the responsible layer
+Review the entire affected flow: calling code, conditions, bypass paths, and code that consumes the result. Some work continues after the call returns. Find out what context it takes from the caller and how long it keeps it.
 
-First, learn what the component receiving the data or call can already do.
+Find out who owns each piece of state, when it is loaded, and which operations see an update. If other components or nodes can change the state, derive any status about it, such as a failure count, from what you observe now, not only from your own actions.
 
-If its capabilities are sufficient, fix the calling code. Do not give the component extra responsibilities just to make calls look alike.
+Read the implementation or contract of each helper, library, or framework call that your conclusion depends on, including what it does on failure. Do not infer its behavior from its name or parameters. If you did not read it, mark the conclusion as unverified.
 
-Keep adapters that perform a necessary conversion or uphold a contract between components.
+For each synchronization or hand-off between threads, name the state or order it protects. Use the lightest primitive that protects it, and remove it when that state is gone. A stop or cancel signal must reach every unit of work, not only the current blocking call.
 
-## 4. Keep the implementation simple and explicit
+When you change the order of operations, or replace or merge collections, tasks, or mechanisms, list the properties that their users relied on and keep them or state the new limit. Examples: iteration order, how keys are compared, whether callers can change returned data, timing precision, and isolation of failures between units.
 
-Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
+## 4. Failures are contained and visible
 
-Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state. Two collections over the same elements, or one collection that holds a filtered copy of another, split that owner. Keep one collection of objects that each hold all the state of their element, and filter when you iterate. Do not keep a field that copies what another field already gives, such as a typed reference or a flag read from it: derive it where you need it. If a dependency becomes available only later, start with a harmless default, such as a no-op object, instead of a flag or a special path for the early calls.
+Aim: no failure, expected or not, passes silently, stops unrelated work, or leaves state that nobody can see.
 
-Compute a value derived from shared data in one place, at the owner of that data, and reuse it. Before writing such a computation, look for the same one in other code that reads the data, including code outside the diff. If every reader converts or groups the data the same way, store it in that shape when it is written.
+For each operation, list how it can fail: expected errors, unchecked exceptions, errors such as a missing class or a failed assertion, interruption, and timeouts. Follow each failure to where it ends up and find out what keeps running after it.
 
-Sometimes other code has to follow a protocol with the internals of another component or report what it did. In that case, look for a design where one owner orders the operations. When you change the order of operations, check every operation that relied on the old order. When you replace a collection, keep the properties its readers rely on: iteration order, how keys are compared, and whether callers can change what it returns.
+Give background and asynchronous work the most attention: scheduled tasks, callbacks, futures, worker loops. Read what the executor does with an exception that escapes a task. It may cancel all later runs and keep the exception where nobody reads it. A failure of one unit must not stop the other units or the schedule.
 
-Choose the simplest mechanism that gives the required precision and guarantees. Add precision, caching, or notifications only when the task needs them. The same applies to the rules the code enforces: a formula, a retry or backoff policy, randomization, a wait, an ordering promise. Prefer a rule that its user can predict from one sentence. Keep each refinement only if you can name the problem it solves in this system. Question rules that the task text prescribes in the same way as code.
+Every failure must reach the same signals as the expected ones: a log record with the cause and the affected objects, and the counter, metric, or status meant to warn about failures. A signal meant to warn operators must cover every way the mechanism can stop.
 
-When a simplification makes a mechanism less precise, such as polling instead of exact timing, find every setting and guarantee that depended on the old precision. State the new limit in the documentation or enforce it.
+Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure. Release resources on every path.
 
-Compute a cheap and harmless value always, rather than only when a switch is on. Each such condition adds states that other code must handle, such as a value computed earlier with the switch off. Let the switch control behavior, not data.
+## 5. Operators can see what the system does
 
-Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure.
+Aim: from logs and metrics alone, a person on call can tell what an important subsystem did, when, and why it failed.
 
-For each check, branch, or special case, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, the contract of a called API, or the library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error. A documented contract counts only if the implementations in use honor it. If the platform's own code makes the same check, keep it too. Judge reachability this way only for checks that the change adds. Do not use it to drop a guarantee that existing code already gives: changing existing behavior needs a requirement.
+Each action of an important subsystem leaves a short, specific log record: the start of periodic work at debug level, outcomes at info level, failures at warn or error level with the cause.
 
-For each synchronization or hand-off between threads, such as an executor, a future, a lock, a wait, or a context passed to another thread, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone. A stop or cancel signal interrupts only the current blocking call, so a loop over several units of work must check it before each unit.
+A log record, metric, or status states what its reader needs to act, such as what failed and when the next attempt is. It covers every case it claims to cover.
 
-For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
+## 6. The design is as simple as the task allows
 
-Keep the parameter if removing it breaks the code, changes required behavior, or prevents the test from reliably checking its scenario. If a suitable value is already set or the setting does not affect the scenario, it is redundant. Similar settings in nearby code do not prove that the parameter is necessary.
+Aim: the reader needs the fewest concepts, state owners, and relationships to understand the change. A small diff alone does not mean a simple design.
 
-Check whether each data transformation, including type casts, is necessary and look for a simpler solution.
+Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state. Each fact lives in one place: derive a value where you need it instead of keeping a copy, and keep one collection of complete elements instead of parallel or filtered copies. Compute a value derived from shared data at the owner of that data and reuse it; look for the same computation in other readers, including code outside the diff. If every reader shapes the data the same way, store it in that shape. If a dependency becomes available later, start with a harmless default instead of a special path for early calls.
 
-Declare variables as close as possible to their first use, in the narrowest necessary scope. When moving declarations, preserve the required conditions and order of evaluation, as well as resource lifetimes.
+If other code must follow a protocol with the internals of a component or report what it did, look for a design where one owner orders the operations.
 
-The result of each operation must be clear. If code relies on a side effect, consider an explicit action that directly expresses the required change.
+Choose the simplest mechanism and rule that give the required precision and guarantees. Add precision, caching, or notifications only when the task needs them. Prefer a rule that its user can predict from one sentence. Keep each refinement only if you can name the problem it solves in this system. When a simplification lowers precision, find every setting and guarantee that depended on it, and state the new limit in the documentation or enforce it.
 
-## 5. Choose values, names, and formatting deliberately
+Compute cheap, harmless data always. Let a switch control behavior, not data.
 
-Justify the choice of every fixed value. Each value must have a clear meaning.
+For each check, branch, or special case that the change adds, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, a called API whose implementations in use honor its contract, or a library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error. If the platform's own code makes the same check, keep it. Do not use this reasoning to drop a guarantee that existing code gives: changing existing behavior needs a requirement.
 
-Extract values used repeatedly with the same meaning into variables or constants.
+Before you recommend removing any check, describe the worst scenario it protects against, including cases with several participants. If the author covered the check with a test, take the scenario from that test. If you cannot show that the scenario is impossible or harmless, ask the author.
 
-Choose names for code elements that clearly show their purpose. A name must match what the element holds or returns, including the keys and values of a map. Use the project’s terminology and naming conventions.
+For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of the effective value, including base classes, shared setup, and helpers in tests. Remove it if nothing required changes. Similar settings in nearby code do not prove that it is needed.
 
-Follow the project’s formatting rules, including line lengths and line breaks.
+Make the result of each operation explicit instead of relying on a side effect. Check whether each data transformation and cast is necessary. Declare variables in the narrowest scope near their first use, and preserve conditions, evaluation order, and resource lifetimes when you move them.
 
-## 6. Check requirements with simple, clear tests
+## 7. Code that runs often is cheap
+
+Aim: code costs no more than its job needs, especially where it runs often or where others call it at their own pace, such as metrics, monitoring, and per-message or per-request paths.
+
+Find out how often each piece of code runs and who calls it.
+
+Write with plain constructs: loops, arrays, and primitive values. A stream, a chain of lambdas, boxing, or a temporary collection needs a reason each time. On a frequently run path, extra work or allocation per call is a finding.
+
+## 8. Values and names say what the reader needs
+
+Aim: each value and name tells the reader exactly what they need, and nothing else.
+
+Justify the choice of every fixed value. Extract a value used repeatedly with the same meaning into a variable or constant.
+
+A name shows the element's purpose in the project's terms and matches what the element holds or returns, including the keys and values of a map. Keep it as short as that allows. Leave caveats, bounds, and implementation precision out of names; if a caveat matters, state it once in the documentation.
+
+## 9. Tests prove the guarantees in real situations
+
+Aim: each test proves one guarantee on a situation that users, operators, or the environment can create, and fails when that guarantee breaks.
 
 For each test, name the single guarantee it checks. Its name, inputs, actions, and result must explain the idea without relying on the discussion history.
 
-Give each test a short description in the project’s documentation format, even if its name looks clear. Write it in three parts: Given — the state that the test creates, When — the action, Then — the result that the test checks. When and Then together state the guarantee. Describe setup methods and helpers that prepare the test state too: first what they give the tests, then how. Write for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add it to the description or simplify the test.
+Give each test a short description in the project's documentation format, even if its name looks clear. Write it in three parts: Given — the state that the test creates, When — the action, Then — the result that the test checks. When and Then together state the guarantee. Describe setup methods and helpers that prepare the test state too: first what they give the tests, then how. Write for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add it to the description or simplify the test.
 
 Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs or failure points handled by the same code need not become separate tests.
 
-Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
+Choose the smallest set of scenarios that covers the changed behavior and possible regressions. Derive them from what users, operators, and the environment can produce, not from the branches of the code. Include failures the code does not expect, such as an unchecked exception or an error from a pluggable component, especially in background work.
 
 For each test, name a supported action or external event that creates its starting state. What would someone observe if the code broke? Assert that observable effect itself, not a sign of it such as a new object or a changed field. Trace the path to that point. Check what has already succeeded and which settings can still change. A direct API test can also protect a documented contract.
 
-Create a scenario through the inputs that users, operators or the environment produce: data, files, configuration and calls. If the scenario depends on another component’s result, run that component on such inputs. Do not stub its result. Use test doubles only for time, concurrency, unavailable external systems, and components that the scenario does not depend on.
+Create a scenario through the inputs that users, operators, or the environment produce: data, files, configuration, and calls. If the scenario depends on another component's result, run that component on such inputs. Do not stub its result. Use test doubles only for time, concurrency, unavailable external systems, failures that real inputs cannot cause, and components that the scenario does not depend on.
 
 In the report, list the test doubles of the reviewed tests. For each one, name what it replaces and the real situation it stands for. Say whether real inputs could create that situation. Go through every test that uses the double, not only the first one you notice. For each test whose scenario comes from a stubbed result that real inputs could produce, name the level where real components create it.
 
@@ -122,92 +135,57 @@ Compare tests that promise the same outcome, including tests in other classes or
 
 Test each requirement at the lowest level where real inputs can create its scenario. Add infrastructure, external dependencies, or waits only when the required behavior cannot be checked without them.
 
-Keep tests as simple, clear, and small as possible. Keep only setup, operations, and checks needed for the guarantee being tested.
-
-Justify each nontrivial part of the test. Check whether a simpler approach will work.
-
-Use the test framework’s features. Read the project’s tests and look for suitable solutions there.
-
-Do not hide the scenario’s meaning behind test implementation details, including helper functions, flags, and complex setup.
-
-Order tests to make them easy to read. Moving to the next test should require as little context switching as possible.
+Keep tests as simple, clear, and small as possible. Justify each nontrivial part, and check whether a simpler approach works. Do not hide the scenario's meaning behind helper functions, flags, and complex setup. Order tests so that moving to the next one needs as little context switching as possible.
 
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
-Break the code that each test protects and run the test: the test must fail. Before removing it, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it.
+Break the code that each test protects and run the test: the test must fail. Before removing a test, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it. Breaking existing lines shows only that they are tested. It cannot show handling that is missing, so look for missing handling separately, as described in section 4.
 
-Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait.
-
-For each wait with a timeout, find the clock that the timeout reads. Check that this clock moves in the test environment. Otherwise the test hangs instead of failing when the event never happens.
+Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait. For each wait with a timeout, find the clock that the timeout reads, and check that this clock moves in the test environment. Otherwise the test hangs instead of failing when the event never happens.
 
 A slow or paused machine must not change the test result. Assume a long pause between any two steps of the test and of the code it runs. Use a timeout only to limit the wait for an event that must happen, and make it long enough that only a missing event exceeds it. Do not expect that an event has not happened yet after some delay, that one thread runs before another without synchronization, or that the clock does not move between two calls. When a check compares times, leave a margin larger than such a pause, or compute the expected value from the same time values that the code uses.
 
 Release resources even when an error occurs.
 
-## 7. Write documentation and explanations in plain language
+## 10. Documentation and explanations are plain
 
-Use the [human-writing](https://github.com/anton-vinogradov/human-writing) skill for all work texts within the task.
+Aim: a reader who did not take part in the discussion understands the change and can act on it without guessing.
 
-If the skill is not installed, read `skills/human-writing/SKILL.md` in its repository. If those instructions are unavailable, apply the rules in this section.
+Use the [human-writing](https://github.com/anton-vinogradov/human-writing) skill for all work texts within the task. If the skill is not installed, read `skills/human-writing/SKILL.md` in its repository. If those instructions are unavailable, apply the rules in this section.
 
-Start with the main point. Be specific: who does what, under which conditions, and with what result.
+Start with the main point. Be specific: who does what, under which conditions, and with what result. Use verified facts. Do not invent system behavior or present assumptions as established causes. Keep technical details that help the reader understand the solution or carry out an action.
 
-Use verified facts. Do not invent system behavior or present assumptions as established causes.
+If code needs a comment, check its readability and the overall approach. First consider clear names and a simpler solution that needs no explanation. Keep a comment about a non-obvious reason or constraint only if the reason cannot be changed within the task and no solution without the explanation has been found. Express obvious actions through code and names.
 
-Keep technical details that help the reader understand the solution or carry out an action.
+Before editing documentation, compare the behavior being described before and after the change, and read the existing description. Justify each edit by a need in the current task: what would the reader misunderstand or be unable to do without it? Do not describe unchanged behavior just because you studied it, unless it is necessary context or the task requires it. Do not duplicate information. If the need for an edit is not established, leave the documentation unchanged. Keep documentation diffs minimal.
 
-If code needs a comment, check its readability and the overall approach. First consider clear names and a simpler solution that needs no explanation.
+If the behavior of a code element other than a test is clear from its name, do not add a description. Use an empty documentation block only if the project's style requires one. When documenting a code element, describe its contract and capabilities, not where, how, by whom, or why it is used.
 
-Keep a comment about a non-obvious reason or constraint if both conditions hold:
+## 11. Findings rest on evidence
 
-- The reason or constraint cannot be changed within the scope of the task.
-- No suitable solution has been found that removes the need for an explanation.
+Aim: each finding can be checked by someone else and leads to the smallest sufficient fix.
 
-Express obvious actions through code and names.
+Treat the user's initial diagnosis and your own first impression as hypotheses to check. This includes a forecast that a proposed design will be more complex: sketch it and compare both versions by concepts, state, branches, and where each element's data and behavior live.
 
-Write documentation for someone who did not take part in the discussion. Instructions must let the reader complete the task without guessing.
+For each finding, show the scenario that triggers it, its consequence, the evidence, and the smallest sufficient fix. Distinguish bugs from open questions and optional improvements. A review with no findings is a valid result.
 
-Before editing documentation, compare the behavior being described before and after the change. Read the existing description. Justify each edit by a need in the current task: what would the reader misunderstand or be unable to do without it?
+## 12. The final solution is checked again
 
-Do not add descriptions of unchanged behavior just because you studied it during the work. Add information about it only as necessary context for the change or when the task explicitly requires it. Do not duplicate information already provided. If the need for an edit is not established, leave the documentation unchanged.
+Aim: the final diff as a whole meets every aim above, not only each fix in isolation.
 
-Keep documentation diffs minimal.
-
-If the behavior of a code element other than a test is clear from its name, do not add a description. Use an empty documentation block only if the project’s style requires one.
-
-When documenting a code element, describe its contract and capabilities. Do not list where, how, by whom, or why it is used.
-
-## 8. Support findings with evidence
-
-Treat the user’s initial diagnosis and your own first impression as hypotheses to check. This includes a forecast that a proposed design will be more complex. Sketch it and compare both versions by collections, fields, branches, casts, and where each element's data and behavior live.
-
-For each finding, show the scenario that triggers it, its consequence, the evidence, and the smallest sufficient fix.
-
-Distinguish bugs from open questions and optional improvements.
-
-A review with no findings is a valid result.
-
-## 9. Check and explain the final solution
-
-After making fixes, reread the entire affected flow and the final diff.
-
-When a finding or a fix changes a requirement, repeat the outline from section 1 for the affected part. Mechanisms, checks, and tests kept for the old requirement may no longer be needed.
+After making fixes, reread the entire affected flow and the final diff. When a finding or a fix changes a requirement, repeat the outline from section 1 for the affected part: mechanisms, checks, and tests kept for the old requirement may no longer be needed.
 
 Compare each changed fragment of existing code, tests, and documentation with the original. If a later change removed the reason for it, restore the original and keep only the lines the task needs.
 
-Check that every remaining edit is necessary and that existing tools and simpler solutions have been considered.
-
 For a substantial rework, walk through a concrete execution example. Explain what became simpler and what changes to behavior or compatibility this required.
 
-Report your conclusions, completed checks, and remaining gaps.
+Report your conclusions, completed checks, and remaining gaps. Explicitly identify and visually highlight each unresolved problem, for example with `⚠️ Unresolved problem`, or ask the user a specific question.
 
-For each unresolved problem, explicitly identify and visually highlight it in the report, for example with `⚠️ Unresolved problem`, or ask the user a specific question.
-
-## 10. Update the installed skill when using it
+## 13. Update the installed skill when using it
 
 Before a review, run `python3 "<skill-directory>/scripts/update.py"` once. Use the directory containing this `SKILL.md`, regardless of the project being reviewed. On Windows, use `py -3` if needed.
 
-The user enables automatic updates once for each installation. Do not enable them on the user’s behalf during a review. Installation and the command to enable updates are described in [README.md](README.md).
+The user enables automatic updates once for each installation. Do not enable them on the user's behalf during a review. Installation and the command to enable updates are described in [README.md](README.md).
 
 The script contacts the upstream source at most once a day and preserves user edits.
 

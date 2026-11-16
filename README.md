@@ -25,7 +25,7 @@ For a chat without skill support, attach [SKILL.md](SKILL.md), the diff, and the
 
 ```text
 Review the attached diff using the attached human-review instructions.
-Skip the automatic-update section. If human-writing is unavailable, use the writing rules in section 7.
+Skip the automatic-update section. If human-writing is unavailable, use the writing rules in section 10.
 ```
 
 This applies the instructions in the current chat. It does not install the skill or enable automatic updates.
@@ -35,7 +35,7 @@ This applies the instructions in the current chat. It does not install the skill
 - Reviewing with the attached instructions requires neither Git nor Python.
 - Installation with `git clone` requires Git.
 - Automatic updates require Git, Python 3.9 or later, network access, and permission to modify the installed skill.
-- Documentation and explanations use [human-writing](https://github.com/anton-vinogradov/human-writing). If it is not installed, the agent reads its instructions from the repository. If those instructions are unavailable, section 7 of human-review includes the core writing rules.
+- Documentation and explanations use [human-writing](https://github.com/anton-vinogradov/human-writing). If it is not installed, the agent reads its instructions from the repository. If those instructions are unavailable, section 10 of human-review includes the core writing rules.
 
 The complete skill is available in [English](SKILL.md) and [Russian](SKILL.ru.md). `SKILL.md` is the installation entry point; `SKILL.ru.md` is its Russian translation. Codex interface metadata is in [agents/openai.yaml](agents/openai.yaml).
 
