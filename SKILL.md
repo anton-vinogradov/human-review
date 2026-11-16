@@ -72,11 +72,13 @@ Choose the simplest mechanism that gives the required precision and guarantees. 
 
 When a simplification makes a mechanism less precise, such as polling instead of exact timing, find every setting and guarantee that depended on the old precision. State the new limit in the documentation or enforce it.
 
+Compute a cheap and harmless value always, rather than only when a switch is on. Each such condition adds states that other code must handle, such as a value computed earlier with the switch off. Let the switch control behavior, not data.
+
 Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure.
 
-For each check, branch, or special case, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, the contract of a called API, or the library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error.
+For each check, branch, or special case, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, the contract of a called API, or the library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error. A documented contract counts only if the implementations in use honor it. If the platform's own code makes the same check, keep it too. Judge reachability this way only for checks that the change adds. Do not use it to drop a guarantee that existing code already gives: changing existing behavior needs a requirement.
 
-For each synchronization or hand-off between threads, such as an executor, a future, a lock, or a wait, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone. A stop or cancel signal interrupts only the current blocking call, so a loop over several units of work must check it before each unit.
+For each synchronization or hand-off between threads, such as an executor, a future, a lock, a wait, or a context passed to another thread, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone. A stop or cancel signal interrupts only the current blocking call, so a loop over several units of work must check it before each unit.
 
 For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
 
@@ -104,7 +106,7 @@ For each test, name the single guarantee it checks. Its name, inputs, actions, a
 
 Give each test a short description in the project’s documentation format, even if its name looks clear. Write it in three parts: Given — the state that the test creates, When — the action, Then — the result that the test checks. When and Then together state the guarantee. Describe setup methods and helpers that prepare the test state too: first what they give the tests, then how. Write for a reader who sees the test for the first time. Then compare the test with the description. Remove setup, actions, and checks that the description does not need. If the test needs a step that the description does not explain, add it to the description or simplify the test.
 
-Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs to the same rule need not become separate tests.
+Make a separate pass for overloaded tests. For each test, list the required behaviors behind its assertions, including checks hidden in helpers. Split independent behaviors into focused tests and keep only the setup each one needs. A shared failure or setup does not make independent requirements one scenario. Keep stages together when a later check needs the earlier stage, such as recovery after a failure. Different inputs or failure points handled by the same code need not become separate tests.
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
@@ -190,6 +192,8 @@ A review with no findings is a valid result.
 After making fixes, reread the entire affected flow and the final diff.
 
 When a finding or a fix changes a requirement, repeat the outline from section 1 for the affected part. Mechanisms, checks, and tests kept for the old requirement may no longer be needed.
+
+Compare each changed fragment of existing code, tests, and documentation with the original. If a later change removed the reason for it, restore the original and keep only the lines the task needs.
 
 Check that every remaining edit is necessary and that existing tools and simpler solutions have been considered.
 
