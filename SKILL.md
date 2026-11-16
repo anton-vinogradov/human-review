@@ -62,7 +62,7 @@ Keep adapters that perform a necessary conversion or uphold a contract between c
 
 Judge simplicity by how many concepts, state owners, and relationships the reader must understand. A small diff alone does not mean a simple solution.
 
-Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state.
+Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state. Two collections over the same elements, or one collection that holds a filtered copy of another, split that owner. Keep one collection of objects that each hold all the state of their element, and filter when you iterate. Do not keep a field that copies what another field already gives, such as a typed reference or a flag read from it: derive it where you need it. If a dependency becomes available only later, start with a harmless default, such as a no-op object, instead of a flag or a special path for the early calls.
 
 Compute a value derived from shared data in one place, at the owner of that data, and reuse it. Before writing such a computation, look for the same one in other code that reads the data, including code outside the diff. If every reader converts or groups the data the same way, store it in that shape when it is written.
 
@@ -179,7 +179,7 @@ When documenting a code element, describe its contract and capabilities. Do not 
 
 ## 8. Support findings with evidence
 
-Treat the user’s initial diagnosis and your own first impression as hypotheses to check.
+Treat the user’s initial diagnosis and your own first impression as hypotheses to check. This includes a forecast that a proposed design will be more complex. Sketch it and compare both versions by collections, fields, branches, casts, and where each element's data and behavior live.
 
 For each finding, show the scenario that triggers it, its consequence, the evidence, and the smallest sufficient fix.
 
