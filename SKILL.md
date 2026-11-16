@@ -21,6 +21,7 @@ List what the change adds:
 
 - mechanisms, such as threads, schedulers, caches, registries, and protocols between components;
 - public members;
+- fields and collections;
 - rules, such as formulas, limits, retries, waits, and ordering;
 - checks and special cases;
 - values derived from shared data.
@@ -43,7 +44,7 @@ Keep the diff minimal without losing required functionality. Do not add preparat
 
 Review the entire affected flow: calling code, conditions, bypass paths, and code that consumes the result.
 
-Find out who owns the state, when it is loaded, and which operations will see the updated value. Some work continues after the call returns. Find out what context it takes from the caller and how long it keeps it.
+Find out who owns the state, when it is loaded, and which operations will see the updated value. Other components or nodes may change the state too. Then derive any status about it, such as a failure count, from what you observe now, not only from your own actions. Some work continues after the call returns. Find out what context it takes from the caller and how long it keeps it.
 
 Read the implementation of each helper or library call that your conclusion depends on. Do not infer its behavior from its name or parameters. If you did not read it, do not state its behavior as a fact: mark the conclusion as unverified.
 
@@ -63,17 +64,19 @@ Judge simplicity by how many concepts, state owners, and relationships the reade
 
 Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state.
 
-Compute a value derived from shared data in one place, at the owner of that data, and reuse it. Before writing such a computation, look for the same one in other code that reads the data, including code outside the diff.
+Compute a value derived from shared data in one place, at the owner of that data, and reuse it. Before writing such a computation, look for the same one in other code that reads the data, including code outside the diff. If every reader converts or groups the data the same way, store it in that shape when it is written.
 
-Sometimes other code has to follow a protocol with the internals of another component or report what it did. In that case, look for a design where one owner orders the operations. When you change the order of operations, check every operation that relied on the old order.
+Sometimes other code has to follow a protocol with the internals of another component or report what it did. In that case, look for a design where one owner orders the operations. When you change the order of operations, check every operation that relied on the old order. When you replace a collection, keep the properties its readers rely on: iteration order, how keys are compared, and whether callers can change what it returns.
 
 Choose the simplest mechanism that gives the required precision and guarantees. Add precision, caching, or notifications only when the task needs them. The same applies to the rules the code enforces: a formula, a retry or backoff policy, randomization, a wait, an ordering promise. Prefer a rule that its user can predict from one sentence. Keep each refinement only if you can name the problem it solves in this system. Question rules that the task text prescribes in the same way as code.
+
+When a simplification makes a mechanism less precise, such as polling instead of exact timing, find every setting and guarantee that depended on the old precision. State the new limit in the documentation or enforce it.
 
 Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure.
 
 For each check, branch, or special case, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, the contract of a called API, or the library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error.
 
-For each synchronization or hand-off between threads, such as an executor, a future, a lock, or a wait, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone.
+For each synchronization or hand-off between threads, such as an executor, a future, a lock, or a wait, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone. A stop or cancel signal interrupts only the current blocking call, so a loop over several units of work must check it before each unit.
 
 For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
 
@@ -91,7 +94,7 @@ Justify the choice of every fixed value. Each value must have a clear meaning.
 
 Extract values used repeatedly with the same meaning into variables or constants.
 
-Choose names for code elements that clearly show their purpose. Use the project’s terminology and naming conventions.
+Choose names for code elements that clearly show their purpose. A name must match what the element holds or returns, including the keys and values of a map. Use the project’s terminology and naming conventions.
 
 Follow the project’s formatting rules, including line lengths and line breaks.
 
@@ -105,7 +108,7 @@ Make a separate pass for overloaded tests. For each test, list the required beha
 
 Choose the smallest set of scenarios that covers the changed behavior and possible regressions.
 
-For each test, name a supported action or external event that creates its starting state. What would someone observe if the code broke? Trace the path to that point. Check what has already succeeded and which settings can still change. A direct API test can also protect a documented contract.
+For each test, name a supported action or external event that creates its starting state. What would someone observe if the code broke? Assert that observable effect itself, not a sign of it such as a new object or a changed field. Trace the path to that point. Check what has already succeeded and which settings can still change. A direct API test can also protect a documented contract.
 
 Create a scenario through the inputs that users, operators or the environment produce: data, files, configuration and calls. If the scenario depends on another component’s result, run that component on such inputs. Do not stub its result. Use test doubles only for time, concurrency, unavailable external systems, and components that the scenario does not depend on.
 
