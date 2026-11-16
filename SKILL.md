@@ -17,7 +17,17 @@ Justify why it is needed. Check whether an existing tool or solution can replace
 
 Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes.
 
-List every new mechanism that the change adds: threads, schedulers, caches, registries, protocols between components. For each one, search the project for an existing mechanism with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how other code in the project uses it: its callers often show how to supply the property it lacks. In the report, name the missing property and the callers you checked.
+List what the change adds:
+
+- mechanisms, such as threads, schedulers, caches, registries, and protocols between components;
+- public members;
+- rules, such as formulas, limits, retries, waits, and ordering;
+- checks and special cases;
+- values derived from shared data.
+
+For each item, name the requirement it serves and who relies on it: a caller, an operator, or another guarantee. Remove an item that nothing relies on. A public member that only the change itself calls does not need to be public.
+
+For each new mechanism, search the project for an existing mechanism with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how other code in the project uses it: its callers often show how to supply the property it lacks. In the report, name the missing property and the callers you checked.
 
 Compare the change with your outline. Each component, state owner, protocol, or public API that the outline does not need must have a reason. Do not keep a design only because the task text prescribes it. If the outline is simpler but weakens a guarantee, describe the trade-off and let the task owner choose.
 
@@ -53,11 +63,17 @@ Judge simplicity by how many concepts, state owners, and relationships the reade
 
 Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state.
 
+Compute a value derived from shared data in one place, at the owner of that data, and reuse it. Before writing such a computation, look for the same one in other code that reads the data, including code outside the diff.
+
 Sometimes other code has to follow a protocol with the internals of another component or report what it did. In that case, look for a design where one owner orders the operations. When you change the order of operations, check every operation that relied on the old order.
 
-Choose the simplest mechanism that gives the required precision and guarantees. Add precision, caching, or notifications only when the task needs them.
+Choose the simplest mechanism that gives the required precision and guarantees. Add precision, caching, or notifications only when the task needs them. The same applies to the rules the code enforces: a formula, a retry or backoff policy, randomization, a wait, an ordering promise. Prefer a rule that its user can predict from one sentence. Keep each refinement only if you can name the problem it solves in this system. Question rules that the task text prescribes in the same way as code.
 
 Publish the results of an operation only after the whole operation succeeds. Do not change state midway and then restore it on failure.
+
+For each check, branch, or special case, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, the contract of a called API, or the library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error.
+
+For each synchronization or hand-off between threads, such as an executor, a future, a lock, or a wait, name the state or order it protects. Use the lightest primitive that protects it. Remove it when that state is gone.
 
 For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of effective values. In tests, these may include the base class, shared setup, and helper methods.
 
@@ -169,6 +185,8 @@ A review with no findings is a valid result.
 ## 9. Check and explain the final solution
 
 After making fixes, reread the entire affected flow and the final diff.
+
+When a finding or a fix changes a requirement, repeat the outline from section 1 for the affected part. Mechanisms, checks, and tests kept for the old requirement may no longer be needed.
 
 Check that every remaining edit is necessary and that existing tools and simpler solutions have been considered.
 
