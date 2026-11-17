@@ -15,11 +15,11 @@ Each section states one aim and the directions that lead to it. Examples show a 
 
 Aim: each element of the change serves a requirement that someone relies on, and the diff contains nothing else.
 
-Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes. Compare the change with the outline. Each component, state owner, protocol, public member, or rule that the outline does not need must have a reason. Question rules that the task text prescribes, such as a formula, a retry policy, or a wait, the same way as code.
+Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes. Compare the change with the outline. Each component, state owner, protocol, public member, or rule that the outline does not need must have a reason. Do not keep a design only because the task text prescribes it. Question rules that the task text prescribes, such as a formula, a retry policy, or a wait, the same way as code.
 
 List what the change adds: mechanisms, public members, fields and collections, rules, checks and special cases, values derived from shared data. For each item, name the requirement it serves and who relies on it: a caller, an operator, or another guarantee. Remove an item that nothing relies on. A member that only the change itself calls does not need to be public.
 
-For each edit, identify the requirement it meets and how it changes behavior. Ask: why is it needed, and why can't it be simpler and clearer? Determine what changes if it is removed or simplified.
+For each edit, identify the requirement it meets and how it changes behavior, and check whether an existing tool or solution can replace it. Ask: why is it needed, and why can't it be simpler and clearer? Determine what changes if it is removed or simplified.
 
 If the simpler outline weakens a guarantee, describe the trade-off and let the task owner choose.
 
@@ -31,7 +31,7 @@ Aim: new code does what the project already does in the way the project does it,
 
 For each new mechanism, such as a thread, a scheduler, a cache, a registry, or a protocol between components, search the project for an existing one with the same purpose. In the report, name what you found or say that you found nothing. Before you reject an existing mechanism, read how its callers use it: they often show how to supply the property it lacks. Name the missing property and the callers you checked.
 
-When a part gets a lifecycle, threads, metrics, configuration, or logging, connect it through the same path that its peer components use. A direct call from central startup or shutdown code, or a one-off way of doing what peers do in a common way, needs a reason.
+When a part gets a lifecycle, threads, metrics, configuration, or logging, connect it through the same path that its peer components use. If peers differ, follow the path that most parts of the same kind use; an exception does not set the pattern. A direct call from central startup or shutdown code, or a one-off way of doing what peers do in a common way, needs a reason.
 
 Do it the right way in the change that creates the need. If the right way requires restructuring existing code outside the task, name the debt, its reason, and its cost in the review, and let the task owner decide whether to do it now or in a separate task.
 
@@ -59,7 +59,7 @@ When you change the order of operations, or replace or merge collections, tasks,
 
 Aim: no failure, expected or not, passes silently, stops unrelated work, or leaves state that nobody can see.
 
-For each operation, list how it can fail: expected errors, unchecked exceptions, errors such as a missing class or a failed assertion, interruption, and timeouts. Follow each failure to where it ends up and find out what keeps running after it.
+For each operation, list how it can fail: expected errors, unchecked exceptions, errors such as a missing class or a failed assertion, interruption, and timeouts. Follow each failure to where it ends up, find out what keeps running after it, and how its cause reaches the user or operator. Decide the scope of each failure: whether one bad element of the input, such as an entry or a record, fails the whole operation or is skipped with a warning. Follow what the platform does with the same input.
 
 Give background and asynchronous work the most attention: scheduled tasks, callbacks, futures, worker loops. Read what the executor does with an exception that escapes a task. It may cancel all later runs and keep the exception where nobody reads it. A failure of one unit must not stop the other units or the schedule.
 
@@ -79,19 +79,19 @@ A log record, metric, or status states what its reader needs to act, such as wha
 
 Aim: the reader needs the fewest concepts, state owners, and relationships to understand the change. A small diff alone does not mean a simple design.
 
-Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state. Each fact lives in one place: derive a value where you need it instead of keeping a copy, and keep one collection of complete elements instead of parallel or filtered copies. Compute a value derived from shared data at the owner of that data and reuse it; look for the same computation in other readers, including code outside the diff. If every reader shapes the data the same way, store it in that shape. If a dependency becomes available later, start with a harmless default instead of a special path for early calls.
+Keep state that changes together in one owner, next to the operation that changes it. This owner also controls access to the state. Each fact lives in one place. Derive a value where you need it instead of keeping a field that copies it. Two collections over the same elements, or one that holds a filtered copy of another, split the owner: keep one collection of elements that each hold all their state, and filter when you iterate. Compute a value derived from shared data at the owner of that data and reuse it; look for the same computation in other readers, including code outside the diff. If every reader shapes the data the same way, store it in that shape. If a dependency becomes available later, start with a harmless default instead of a special path for early calls.
 
 If other code must follow a protocol with the internals of a component or report what it did, look for a design where one owner orders the operations.
 
 Choose the simplest mechanism and rule that give the required precision and guarantees. Add precision, caching, or notifications only when the task needs them. Prefer a rule that its user can predict from one sentence. Keep each refinement only if you can name the problem it solves in this system. When a simplification lowers precision, find every setting and guarantee that depended on it, and state the new limit in the documentation or enforce it.
 
-Compute cheap, harmless data always. Let a switch control behavior, not data.
+Compute cheap, harmless data always. Data computed only when a switch is on adds states that other code must handle, such as a value computed earlier with the switch off. Let a switch control behavior, not data.
 
 For each check, branch, or special case that the change adds, name a realistic input that reaches it. Then look for what already guarantees the same outcome: the data structure, an earlier step, a called API whose implementations in use honor its contract, or a library that consumes the data. The check is redundant if such a guarantee exists or only contrived inputs reach it. Do not repeat a validation that the next step or a library performs anyway, unless the task needs an earlier or clearer error. If the platform's own code makes the same check, keep it. Do not use this reasoning to drop a guarantee that existing code gives: changing existing behavior needs a requirement.
 
 Before you recommend removing any check, describe the worst scenario it protects against, including cases with several participants. If the author covered the check with a test, take the scenario from that test. If you cannot show that the scenario is impossible or harmless, ask the author.
 
-For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of the effective value, including base classes, shared setup, and helpers in tests. Remove it if nothing required changes. Similar settings in nearby code do not prove that it is needed.
+For each explicitly set parameter, determine what changes if it is removed. Check the API implementation for defaults, required arguments, and constraints. Account for all sources of the effective value, including base classes, shared setup, and helpers in tests. Keep it if removing it breaks the code, changes required behavior, or keeps a test from reliably checking its scenario. If a suitable value is already set or the setting does not affect the scenario, it is redundant. Similar settings in nearby code do not prove that it is needed.
 
 Make the result of each operation explicit instead of relying on a side effect. Check whether each data transformation and cast is necessary. Declare variables in the narrowest scope near their first use, and preserve conditions, evaluation order, and resource lifetimes when you move them.
 
@@ -139,7 +139,7 @@ Keep tests as simple, clear, and small as possible. Justify each nontrivial part
 
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
-Break the code that each test protects and run the test: the test must fail. Before removing a test, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it. Breaking existing lines shows only that they are tested. It cannot show handling that is missing, so look for missing handling separately, as described in section 4.
+Break the code that each test protects and run the test: the test must fail. Also go the other way: for each production change, name the test that fails without it. A change that no test notices, such as wiring into startup or shutdown, needs a test at the level where it takes effect. Before removing a test, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it. Breaking existing lines shows only that they are tested. It cannot show handling that is missing, so look for missing handling separately, as described in section 4.
 
 Wait for the required event instead of an arbitrary delay. Justify every wait that uses a timeout. Where possible, replace it with an action that does not need that wait. For each wait with a timeout, find the clock that the timeout reads, and check that this clock moves in the test environment. Otherwise the test hangs instead of failing when the event never happens.
 
@@ -175,7 +175,7 @@ Aim: the final diff as a whole meets every aim above, not only each fix in isola
 
 After making fixes, reread the entire affected flow and the final diff. When a finding or a fix changes a requirement, repeat the outline from section 1 for the affected part: mechanisms, checks, and tests kept for the old requirement may no longer be needed.
 
-Compare each changed fragment of existing code, tests, and documentation with the original. If a later change removed the reason for it, restore the original and keep only the lines the task needs.
+Compare each changed fragment of existing code, tests, and documentation with the original. If a later change removed the reason for it, restore the original and keep only the lines the task needs. Check that every remaining edit is necessary and that existing tools and simpler solutions have been considered.
 
 For a substantial rework, walk through a concrete execution example. Explain what became simpler and what changes to behavior or compatibility this required.
 
