@@ -13,7 +13,7 @@ Each section states one aim and the directions that lead to it. Examples show a 
 
 ## 1. Every part of the change is needed
 
-Aim: each element of the change serves a requirement that someone relies on, and the diff contains nothing else.
+Aim: each element of the change serves a requirement that someone relies on, the diff contains nothing else, and each behavior change in it is easy to find.
 
 Before you judge individual edits, outline the simplest solution of the task, even if a solution already exists. Start from the task's goal and acceptance criteria, not from the implementation steps it prescribes. Compare the change with the outline. Each component, state owner, protocol, public member, or rule that the outline does not need must have a reason. Do not keep a design only because the task text prescribes it. Question rules that the task text prescribes, such as a formula, a retry policy, or a wait, the same way as code.
 
@@ -24,6 +24,8 @@ For each edit, identify the requirement it meets and how it changes behavior, an
 If the simpler outline weakens a guarantee, describe the trade-off and let the task owner choose.
 
 Keep the diff minimal without losing required behavior. Do not add preparation for hypothetical future tasks or unrelated formatting changes.
+
+Keep the existing structure of the files. Classes, methods, and members stay where they are, with the same order, boundaries, names, and formatting. A reviewer must see each behavior change as a separate edit, not search for it inside moved or rewritten code. Refactoring includes extracting or merging methods, moving or reordering code, and renaming. It also includes changing the modifiers or signatures of code whose behavior stays the same, and restyling code, such as braces or line breaks. Keep a refactoring only if the task needs it, for example when the task moves code to another owner, or if the change is hard to follow without it. In the report, list each refactoring in the diff and the requirement that needs it. Propose to restore the original form of the rest.
 
 ## 2. The change fits the project like its peers
 
