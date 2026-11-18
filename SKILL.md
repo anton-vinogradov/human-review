@@ -139,7 +139,7 @@ Test each requirement at the lowest level where real inputs can create its scena
 
 Keep tests as simple, clear, and small as possible. Justify each nontrivial part, and check whether a simpler approach works. Do not hide the scenario's meaning behind helper functions, flags, and complex setup. Order tests so that moving to the next one needs as little context switching as possible.
 
-Every value that decides the result of a test must be visible in the test. For each assertion, list the inputs that decide it, such as the host name in a certificate or a limit in the configuration. Each of them must appear in the test body or in the name of a helper or data file that the body uses. A shared helper, data file, base class, or class description must not set such a value silently. Pass the value to the helper as an argument, and leave only the mechanics in the helper. Name a data file after the property that the test relies on.
+Every value that decides the result of a test must be visible in the test. For each assertion, list the inputs that decide it. The test sets each of them itself or uses a name that states it. Setup shared by several tests must not choose such a value silently: it takes the value as an argument and does only the mechanics.
 
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
