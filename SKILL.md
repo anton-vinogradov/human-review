@@ -139,6 +139,8 @@ Test each requirement at the lowest level where real inputs can create its scena
 
 Keep tests as simple, clear, and small as possible. Justify each nontrivial part, and check whether a simpler approach works. Do not hide the scenario's meaning behind helper functions, flags, and complex setup. Order tests so that moving to the next one needs as little context switching as possible.
 
+Every value that decides the result of a test must be visible in the test. For each assertion, list the inputs that decide it, such as the host name in a certificate or a limit in the configuration. Each of them must appear in the test body or in the name of a helper or data file that the body uses. A shared helper, data file, base class, or class description must not set such a value silently. Pass the value to the helper as an argument, and leave only the mechanics in the helper. Name a data file after the property that the test relies on.
+
 Confirm that the test actually reached the condition or event being tested. For a failure test, check that the intended failure occurred.
 
 Break the code that each test protects and run the test: the test must fail. Also go the other way: for each production change, name the test that fails without it. A change that no test notices, such as wiring into startup or shutdown, needs a test at the level where it takes effect. Before removing a test, show which remaining test catches each reachable regression. If only the fixture permits a failure, identify the production step that prevents it. Breaking existing lines shows only that they are tested. It cannot show handling that is missing, so look for missing handling separately, as described in section 4.
