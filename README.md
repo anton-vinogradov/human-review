@@ -2,7 +2,9 @@
 
 [English](README.md) | [Русский](README.ru.md)
 
-Code review instructions for checking whether each change is necessary, preserves required behavior, and uses a simpler solution where possible.
+Human Review helps prepare changes for your review. Before handing over the work, the model rereads the code and tests. It removes unrelated edits, clarifies names, and simplifies code where the behavior is hard to follow.
+
+When you read the changes, it’s easier to see how the program now works and why the model chose that approach. You spend less time on minor comments and can focus on whether the model understood the task and where it should reconsider its approach.
 
 Installation depends on the application running the model. The commands below are for Codex. Other agents may use different skill directories and invocation methods.
 
@@ -17,15 +19,19 @@ If installation as a standalone Git clone is supported, use it. Leave automatic 
 Check that the skill is available. If skill installation is unsupported, say so.
 ```
 
-After installation in Codex, you can send this request:
+After installation, open your project in Codex and ask for a review.
 
-> Use $human-review to review this diff. Explain which additions are necessary, verify lifecycle assumptions, and identify simpler existing mechanisms. Keep the review read-only.
+> Use $human-review to review these changes against the task. Fix confirmed problems within scope and review the result again.
+
+For a read-only review, make that explicit.
+
+> Use $human-review to review these changes and report your findings without editing files.
 
 For a chat without skill support, attach [SKILL.md](SKILL.md), the diff, and the source files needed to understand the changes. Then send:
 
 ```text
 Review the attached diff using the attached human-review instructions.
-Skip the automatic-update section. If human-writing is unavailable, use the writing rules in section 10.
+Skip the update check for this attachment. If human-writing is unavailable, follow the writing guidance in the attached skill.
 ```
 
 This applies the instructions in the current chat. It does not install the skill or enable automatic updates.
@@ -35,7 +41,7 @@ This applies the instructions in the current chat. It does not install the skill
 - Reviewing with the attached instructions requires neither Git nor Python.
 - Installation with `git clone` requires Git.
 - Automatic updates require Git, Python 3.9 or later, network access, and permission to modify the installed skill.
-- Documentation and explanations use [human-writing](https://github.com/anton-vinogradov/human-writing). If it is not installed, the agent reads its instructions from the repository. If those instructions are unavailable, section 10 of human-review includes the core writing rules.
+- The model uses human-writing for all task-related text. If the skill is missing, it reads the instructions from the repository. If those are unavailable, it follows the writing guidance in Human Review. [human-writing](https://github.com/anton-vinogradov/human-writing)
 
 The complete skill is available in [English](SKILL.md) and [Russian](SKILL.ru.md). `SKILL.md` is the installation entry point; `SKILL.ru.md` is its Russian translation. Codex interface metadata is in [agents/openai.yaml](agents/openai.yaml).
 
@@ -47,7 +53,7 @@ To support automatic updates, install a standalone Git clone. In macOS, Linux, W
 git clone --branch main https://github.com/anton-vinogradov/human-review.git "$HOME/.agents/skills/human-review"
 ```
 
-If the destination already exists, Git stops without overwriting it. See the migration instructions below. A copied skill still works for review, but automatic updates require the Git installation.
+If the destination already contains files, Git stops without overwriting them. See the migration instructions below. A copied skill still works for review, but automatic updates require the Git installation.
 
 ## Enable automatic updates
 
@@ -86,12 +92,14 @@ The preference, last attempted check, and update lock are stored in the installa
 
 Existing copies cannot acquire this updater merely because the GitHub repository changes.
 
-- **Clean Git clone without local commits:** update the `main` checkout with `git pull --ff-only` from this repository. Run the `--enable` command above once.
-- **Copied files, a skill-installer download, or a Git clone with local edits or commits:** move the old skill folder to a backup outside all skill discovery directories. Clone into the original location, then run `--enable`. Keep the backup until you have checked for personal changes. Reapplying those changes to the installation will suspend automatic updates.
+- **Clean Git clone without local commits:** update the `main` checkout with `git pull --ff-only` from this repository.
+- **Copied files, a skill-installer download, or a Git clone with local edits or commits:** move the old skill folder to a backup outside all skill discovery directories. Clone into the original location. Keep the backup until you have checked for personal changes. Reapplying those changes to the installation will suspend automatic updates.
 
-Keep one discoverable `human-review` installation to avoid selecting an older duplicate. No reset, automatic merge of local changes, or deletion of an existing installation is needed.
+To opt in after migration, run `--enable` once for the new installation. Keep one discoverable `human-review` installation to avoid selecting an older duplicate. No reset, automatic merge of local changes, or deletion of an existing installation is needed.
 
 ## Development
+
+Use the review criteria to judge changes to the skill’s behavior. The authoring rules cover writing the skill and verifying installation and updates. [Review criteria](docs/criteria.md) · [Authoring rules](docs/authoring.md)
 
 Run the updater tests without network access:
 
